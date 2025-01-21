@@ -33,7 +33,7 @@ const getNowPlaying = async () => {
 export default async function handler(req, res) {
   // Define allowed origins - you can add more domains if needed
   const allowedOrigins = [
-    'https://www.pointnotelab.com',
+    'https://www.pointonelab.com',
     'http://localhost:3000' // for local development
   ];
   
