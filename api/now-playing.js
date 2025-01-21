@@ -31,26 +31,13 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-  // Define allowed origins - you can add more domains if needed
-  const allowedOrigins = [
-    'https://www.pointonelab.com',
-    'http://localhost:3000' // for local development
-  ];
-  
-  const origin = req.headers.origin;
-  
-  // Check if the origin is in our allowed origins list
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  // Set other CORS headers
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  // Add these headers before any other logic
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.pointonelab.com');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // Handle preflight requests
+  // Handle OPTIONS preflight request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
