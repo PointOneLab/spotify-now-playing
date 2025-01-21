@@ -32,7 +32,7 @@ const getNowPlaying = async () => {
 
 export default async function handler(req, res) {
     // Add these headers before any other logic
-    res.setHeader('Access-Control-Allow-Origin', 'https://www.pointonelab.com');
+    res.setHeader('Access-Control-Allow-Origin', 'https://pointonelab.com');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
