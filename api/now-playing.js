@@ -1,27 +1,26 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-const client_id = process.env.SPOTIFY_CLIENT_ID;
-const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-const refresh_token = process.env.SPOTIFY_REFRESH_TOKEN;
-
-const basic = Buffer.from(`${client_id}:${client_secret}`).toString('base64');
+const basic = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
 const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-playing`;
 const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
 
-async function getAccessToken() {
+const getAccessToken = async () => {
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${basic}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: `grant_type=refresh_token&refresh_token=${refresh_token}`,
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: process.env.SPOTIFY_REFRESH_TOKEN,
+    }),
   });
 
   return response.json();
-}
+};
 
-async function getNowPlaying() {
+const getNowPlaying = async () => {
   const { access_token } = await getAccessToken();
 
   return fetch(NOW_PLAYING_ENDPOINT, {
@@ -29,11 +28,12 @@ async function getNowPlaying() {
       Authorization: `Bearer ${access_token}`,
     },
   });
-}
+};
 
-module.exports = async (_, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   const response = await getNowPlaying();
 
@@ -57,4 +57,4 @@ module.exports = async (_, res) => {
     albumImageUrl,
     songUrl,
   });
-};
+}
