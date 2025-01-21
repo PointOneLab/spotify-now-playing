@@ -31,14 +31,11 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-  // Add these CORS headers at the start of your handler function
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Replace * with your website URL in production
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  // Updated CORS headers with specific origin
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.pointnotelab.com');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours cache for preflight requests
 
   // Add this OPTIONS check right after setting headers
   if (req.method === 'OPTIONS') {
