@@ -31,42 +31,52 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-  // Updated CORS headers with specific origin
+  // Handle CORS preflight
   res.setHeader('Access-Control-Allow-Origin', 'https://www.pointnotelab.com');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours cache for preflight requests
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
-  // Add this OPTIONS check right after setting headers
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  try {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const response = await getNowPlaying();
+
+    if (response.status === 204 || response.status > 400) {
+      return res.status(200).json({ isPlaying: false });
+    }
+
+    const song = await response.json();
+    
+    if (!song.item) {
+      return res.status(200).json({ isPlaying: false });
+    }
+
+    const isPlaying = song.is_playing;
+    const title = song.item.name;
+    const artist = song.item.artists.map((_artist) => _artist.name).join(', ');
+    const album = song.item.album.name;
+    const albumImageUrl = song.item.album.images[0].url;
+    const songUrl = song.item.external_urls.spotify;
+
+    return res.status(200).json({
+      isPlaying,
+      title,
+      artist,
+      album,
+      albumImageUrl,
+      songUrl,
+    });
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
-
-  const response = await getNowPlaying();
-
-  if (response.status === 204 || response.status > 400) {
-    return res.status(200).json({ isPlaying: false });
-  }
-
-  const song = await response.json();
-  const isPlaying = song.is_playing;
-  const title = song.item.name;
-  const artist = song.item.artists.map((_artist) => _artist.name).join(', ');
-  const album = song.item.album.name;
-  const albumImageUrl = song.item.album.images[0].url;
-  const songUrl = song.item.external_urls.spotify;
-
-  return res.status(200).json({
-    isPlaying,
-    title,
-    artist,
-    album,
-    albumImageUrl,
-    songUrl,
-  });
 }
