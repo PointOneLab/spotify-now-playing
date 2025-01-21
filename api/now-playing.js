@@ -31,18 +31,33 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-    // Add these headers before any other logic
-    res.setHeader('Access-Control-Allow-Origin', 'https://www.pointonelab.com');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Get the origin from the request headers
+  const origin = req.headers.origin;
+  
+  // Define allowed origins
+  const allowedOrigins = [
+    'https://www.pointonelab.com',
+    'https://pointonelab.com',
+    // Add any other domains that need access
+  ];
 
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
+  // Check if the origin is allowed
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    // For development, you might want to log unauthorized attempts
+    console.log('Unauthorized origin:', origin);
+  }
 
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
   try {
     if (req.method !== 'GET') {
       return res.status(405).json({ error: 'Method not allowed' });
