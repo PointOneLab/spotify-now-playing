@@ -31,17 +31,17 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-  // Add these headers before any other logic
-  res.setHeader('Access-Control-Allow-Origin', 'https://www.pointonelab.com');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+    // Add these headers before any other logic
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.pointonelab.com');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
 
   try {
     if (req.method !== 'GET') {
