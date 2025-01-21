@@ -3,6 +3,6 @@
   "name": "spotify-now-playing",
   "version": "1.0.0",
   "dependencies": {
-  "node-fetch": "^2.6.1"
+    "node-fetch": "^3.3.0"
   }
 }
