@@ -2,7 +2,7 @@
   "version": 2,
   "routes": [
     {
-      "src": "/api/update-positions",
+      "src": "/api/now-playing",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET"
