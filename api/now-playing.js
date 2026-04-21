@@ -17,6 +17,12 @@ const getAccessToken = async () => {
     }),
   });
 
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Spotify Token Error:', errorText);
+    throw new Error(`Refresh Token Failed: ${response.status}`);
+  }
+
   return response.json();
 };
 
@@ -31,67 +37,51 @@ const getNowPlaying = async () => {
 };
 
 export default async function handler(req, res) {
-  // Get the origin from the request headers
   const origin = req.headers.origin;
-  
-  // Define allowed origins
-  const allowedOrigins = [
-    'https://www.pointonelab.com',
-    'https://pointonelab.com',
-    // Add any other domains that need access
-  ];
+  const allowedOrigins = ['https://www.pointonelab.com', 'https://pointonelab.com'];
 
-  // Check if the origin is allowed
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    // For development, you might want to log unauthorized attempts
-    console.log('Unauthorized origin:', origin);
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // FORCE VERCEL TO FETCH FRESH DATA EVERY TIME
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
     const response = await getNowPlaying();
 
-    if (response.status === 204 || response.status > 400) {
-      return res.status(200).json({ isPlaying: false });
+    // 204 means "Success, but nothing is playing right now"
+    if (response.status === 204) {
+      return res.status(200).json({ isPlaying: false, status: 'No active playback' });
+    }
+
+    // If Spotify returns an error, we want to see it in the Vercel logs
+    if (response.status > 400) {
+      const errorData = await response.text();
+      console.error(`Spotify API Error (${response.status}):`, errorData);
+      return res.status(200).json({ isPlaying: false, error: 'Spotify API error', code: response.status });
     }
 
     const song = await response.json();
     
-    if (!song.item) {
+    if (!song || !song.item) {
       return res.status(200).json({ isPlaying: false });
     }
 
-    const isPlaying = song.is_playing;
-    const title = song.item.name;
-    const artist = song.item.artists.map((_artist) => _artist.name).join(', ');
-    const album = song.item.album.name;
-    const albumImageUrl = song.item.album.images[0].url;
-    const songUrl = song.item.external_urls.spotify;
-
     return res.status(200).json({
-      isPlaying,
-      title,
-      artist,
-      album,
-      albumImageUrl,
-      songUrl,
+      isPlaying: song.is_playing,
+      title: song.item.name,
+      artist: song.item.artists.map((_artist) => _artist.name).join(', '),
+      album: song.item.album.name,
+      albumImageUrl: song.item.album.images[0].url,
+      songUrl: song.item.external_urls.spotify,
     });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Serverless Function Error:', error.message);
     return res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 }
